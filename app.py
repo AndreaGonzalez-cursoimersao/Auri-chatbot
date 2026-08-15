@@ -55,7 +55,7 @@ if GROQ_API_KEY:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-    if user_input := st.chat_input("Como posso ajudar você hoje?"):
+        if user_input := st.chat_input("Como posso ajudar você hoje?"):
         with st.chat_message("user"):
             st.markdown(user_input)
         
@@ -66,9 +66,13 @@ if GROQ_API_KEY:
 
         with st.chat_message("assistant"):
             response = chain.invoke({"messages": api_messages})
+            
+            # ✂️ TRUQUE MÁGICO: Remove toda a parte de "thinking" se ela existir
+            if "</think>" in response:
+                response = response.split("</think>")[-1].strip()
+                
             st.markdown(response)
         
         st.session_state.messages.append({"role": "user", "content": user_input})
         st.session_state.messages.append({"role": "assistant", "content": response})
-else:
-    st.error("Por favor, configure a variável GROQ_API_KEY nos segredos do Streamlit.")
+
