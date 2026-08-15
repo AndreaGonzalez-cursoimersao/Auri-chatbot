@@ -36,7 +36,7 @@ if GROQ_API_KEY:
 
     prompt = ChatPromptTemplate.from_messages([
         ("system", (
-            "Você é um atendente virtual prestativo da loja online TechExpress.\n"
+            "Você é um atendente virtual prestativo da loja online Auri.\n"
             "Responda às dúvidas dos clientes usando APENAS as informações do contexto abaixo, extraídas dos nossos PDFs.\n"
             "Se o cliente perguntar algo que não está no contexto, diga educadamente que não tem essa informação "
             "e peça para ele aguardar um atendente humano.\n\n"
