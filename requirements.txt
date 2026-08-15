@@ -1,8 +1,9 @@
 streamlit
 langchain
 langchain-community
-pypdf
-chromadb
 langchain-openai
 langchain-core
+pypdf
+chromadb
 reportlab
+python-dotenv
