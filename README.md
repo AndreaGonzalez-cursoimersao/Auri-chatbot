@@ -32,6 +32,23 @@ A arquitetura do chatbot foi desenhada para ser leve, estável e imune a conflit
 
 ---
 
+## 📋 Estrutura de Arquivos do Projeto
+
+```text
+meu-chatbot/
+│
+├── documentos/          # Pasta com os arquivos PDF oficiais lidos pela IA
+│   ├── trocas.pdf
+│   ├── privacidade.pdf
+│   └── faq.pdf
+│
+├── app.py               # Código principal do robô e interface do chat
+├── gerar_pdfs.py        # Script utilitário para automação dos documentos base
+├── requirements.txt     # Gerenciador de dependências do servidor
+└── README.md            # Documentação técnica do projeto
+
+```
+
 ## 🚀 Instruções para Executar o Projeto
 
 ### Execução na Nuvem (Pronto para Uso)
