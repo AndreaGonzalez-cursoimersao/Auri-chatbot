@@ -1,4 +1,4 @@
-# 🤖 Assistente Virtual de Atendimento - TechExpress
+# 🤖 Assistente Virtual de Atendimento - Auri
 
 ## 📋 Descrição Geral do Projeto
 Este projeto consiste no desenvolvimento de um chatbot inteligente de atendimento para a loja virtual fictícia "Auri". 
