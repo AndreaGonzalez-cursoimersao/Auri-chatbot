@@ -32,7 +32,7 @@ CONTEXTO_DOS_PDFS = ler_textos_dos_pdfs()
 
 if GROQ_API_KEY:
     # Configura o modelo gratuito do Llama via Groq
-    llm = ChatGroq(model="llama-3.3-70b-specdec", groq_api_key=GROQ_API_KEY, temperature=0.2)
+    llm = ChatGroq(model="qwen/qwen3.6-27b", groq_api_key=GROQ_API_KEY, temperature=0.2)
 
     prompt = ChatPromptTemplate.from_messages([
         ("system", (
