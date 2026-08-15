@@ -14,7 +14,7 @@ O sistema foi desenvolvido utilizando **Python** e uma arquitetura simplificada 
 - **Modelo de Linguagem (LLM):** `qwen/qwen3.6-27b` via Groq.
 - **Orquestração de Prompt:** `LangChain Core` para a estruturação de templates de prompts sistêmicos e tratamento de histórico.
 - **Processamento de PDFs:** `PyPDF` (`PdfReader`) para varredura e extração de texto nativa diretamente dos arquivos físicos.
-- **Hospedagem em Nuvem:** `Streamlit Community Cloud` integrado ao controle de versão via `GitHub`.
+- **Hospedagem em Nuvem:** `Streamlit Community Cloud` integrado ao controle de versão via `GitHub`. https://auri-chatbot-ysxjzqk8zcrykknq2gbwup.streamlit.app/
 
 ---
 
@@ -33,3 +33,4 @@ meu-chatbot/
 ├── requirements.txt     # Gerenciador de dependências do servidor
 └── README.md            # Documentação técnica do projeto
 ```
+
