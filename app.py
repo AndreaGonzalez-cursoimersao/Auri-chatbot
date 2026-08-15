@@ -1,75 +1,79 @@
 import streamlit as st
 import os
-from langchain_community.document_loaders import PyPDFDirectoryLoader
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import Chroma
-from langchain.chains import create_retrieval_chain
-from langchain.chains.combine_documents import create_stuff_documents_chain
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from pypdf import PdfReader
+from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
-from langchain.chains.combine_documents import create_stuff_documents_chain
-from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
 
+# 1. Pega a chave da OpenAI que você salvou nos Segredos
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 st.title("🤖 Assistente Virtual - TechExpress")
 st.write("Pergunte sobre trocas, privacidade, descontos e prazos!")
 
+# 2. Função simples para ler o texto de todos os PDFs da pasta de documentos
 @st.cache_resource
-def inicializar_banco_dados():
-    if not os.path.exists("documentos") or not os.listdir("documentos"):
-        st.error("A pasta 'documentos' está vazia. Execute o script 'gerar_pdfs.py' primeiro!")
-        return None
-        
-    loader = PyPDFDirectoryLoader("documentos/")
-    docs = loader.load()
+def ler_textos_dos_pdfs():
+    texto_completo = ""
+    pasta = "documentos"
     
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=600, chunk_overlap=100)
-    chunks = text_splitter.split_documents(docs)
-    
-    embeddings = OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY)
-    vectorstore = Chroma.from_documents(chunks, embeddings)
-    return vectorstore.as_retriever(search_kwargs={"k": 2})
+    if os.path.exists(pasta):
+        for arquivo in os.listdir(pasta):
+            if arquivo.endswith(".pdf"):
+                caminho = os.path.join(pasta, arquivo)
+                try:
+                    reader = PdfReader(caminho)
+                    for pagina in reader.pages:
+                        texto_completo += pagina.extract_text() + "\n"
+                except Exception:
+                    pass
+    return texto_completo
+
+# Carrega as políticas dos arquivos de verdade que estão no seu GitHub
+CONTEXTO_DOS_PDFS = ler_textos_dos_pdfs()
 
 if OPENAI_API_KEY:
-    retriever = inicializar_banco_dados()
-    
-    if retriever:
-        llm = ChatOpenAI(model="gpt-4o-mini", openai_api_key=OPENAI_API_KEY, temperature=0.2)
+    # Configura a Inteligência Artificial
+    llm = ChatOpenAI(model="gpt-4o-mini", openai_api_key=OPENAI_API_KEY, temperature=0.2)
 
-        system_prompt = (
-            "Você é um atendente virtual muito educado da loja online TechExpress.\n"
-            "Use estritamente os fragmentos de contexto extraídos dos PDFs da loja para responder.\n"
-            "Se você não souber a resposta ou ela não estiver nos arquivos, responda exatamente: "
-            "'Desculpe, não tenho essa informação nos meus manuais. Por favor, aguarde um atendente humano.'\n\n"
-            "CONTEXTO EXTRAÍDO DOS PDFS:\n"
-            "{context}"
-        )
+    # Cria o comando mandando o texto extraído dos PDFs como contexto real
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", (
+            "Você é um atendente virtual prestativo da loja online TechExpress.\n"
+            "Responda às dúvidas dos clientes usando APENAS as informações do contexto abaixo, que foram extraídas dos nossos PDFs oficiais.\n"
+            "Se o cliente perguntar algo que não está no contexto, diga educadamente que não tem essa informação "
+            "e peça para ele aguardar um atendente humano.\n\n"
+            "CONTEXTO EXTRAÍDO DOS PDFS DA LOJA:\n"
+            f"{CONTEXTO_DOS_PDFS}"
+        )),
+        ("placeholder", "{messages}"),
+    ])
+
+    chain = prompt | llm | StrOutputParser()
+
+    # Histórico de conversas na tela
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+
+    # Entrada de texto do usuário
+    if user_input := st.chat_input("Como posso ajudar você hoje?"):
+        with st.chat_message("user"):
+            st.markdown(user_input)
         
-        prompt = ChatPromptTemplate.from_messages([
-            ("system", system_prompt),
-            ("human", "{input}"),
-        ])
+        api_messages = []
+        for msg in st.session_state.messages:
+            api_messages.append((msg["role"], msg["content"]))
+        api_messages.append(("user", user_input))
 
-        question_answer_chain = create_stuff_documents_chain(llm, prompt)
-        rag_chain = create_retrieval_chain(retriever, question_answer_chain)
-
-        if "messages" not in st.session_state:
-            st.session_state.messages = []
-
-        for message in st.session_state.messages:
-            with st.chat_message(message["role"]):
-                st.markdown(message["content"])
-
-        if user_input := st.chat_input("Como posso ajudar você hoje?"):
-            st.session_state.messages.append({"role": "user", "content": user_input})
-            with st.chat_message("user"):
-                st.markdown(user_input)
-
-            with st.chat_message("assistant"):
-                response = rag_chain.invoke({"input": user_input})
-                answer = response["answer"]
-                st.markdown(answer)
-                st.session_state.messages.append({"role": "assistant", "content": answer})
+        with st.chat_message("assistant"):
+            response = chain.invoke({"messages": api_messages})
+            st.markdown(response)
+        
+        st.session_state.messages.append({"role": "user", "content": user_input})
+        st.session_state.messages.append({"role": "assistant", "content": response})
 else:
-    st.error("Por favor, configure a variável de ambiente OPENAI_API_KEY para ativar o robô.")
+    st.error("Por favor, configure a variável OPENAI_API_KEY nas configurações do Streamlit.")
